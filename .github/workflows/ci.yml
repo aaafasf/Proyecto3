@@ -47,7 +47,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: cristian
+          file: Cristian # <--- CORREGIDO
           push: true
           tags: |
             ghcr.io/${{ secrets.GHCR_USER }}/cristian:3.0.0
@@ -57,7 +57,6 @@ jobs:
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: always()
 
     steps:
       - name: Checkout code
@@ -94,18 +93,12 @@ jobs:
             set -e
             cd /home/${{ secrets.VPS_USER }}/recuperacion
 
-            # login GHCR
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
 
-            # asegurar la red traefik-public
             docker network create --attachable --driver overlay traefik-public || true
-
-            # pull imagen
             docker pull ghcr.io/${{ secrets.GHCR_USER }}/cristian:3.0.0
 
-            # remover stack anterior y desplegar el nuevo
             docker stack rm cristian_stack || true
             sleep 5
-            docker stack deploy --with-registry-auth --resolve-image always -c cristian.yml cristian_stack
 
-            docker service ls
+            docker stack deploy --with-registry-auth --resolve-image always -c cristian.yml cristian_stack

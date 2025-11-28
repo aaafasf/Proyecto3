@@ -10,7 +10,7 @@ def hello():
     <head><meta charset="utf-8"><title>CRISTIAN</title></head>
     <body style="font-family: sans-serif; display:flex;align-items:center;justify-content:center;height:100vh;">
       <div style="text-align:center;">
-        <h1>CRISTIAN STEVEN CALLE CUZCO</h1>
+        <h1>EXAMEN</h1>
         <p>Versión 3.0.0 — Ejecutándose con Flask</p>
       </div>
     </body>

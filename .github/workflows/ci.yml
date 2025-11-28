@@ -2,9 +2,9 @@ name: "CI/CD Pipeline"
 
 on:
   push:
-    branches: [ steven ]
+    branches: [steven]
   pull_request:
-    branches: [ steven ]
+    branches: [steven]
 
 jobs:
   build-and-test:
@@ -39,7 +39,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: Cristian
+          file: ./Dockerfile
           push: true
           tags: ghcr.io/${{ secrets.GHCR_USER }}/cristian:3.0.0
 
@@ -48,15 +48,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Crear carpeta en VPS
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
           port: ${{ secrets.VPS_SSH_PORT }}
           username: ${{ secrets.VPS_USER }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          script: |
-            mkdir -p /home/${{ secrets.VPS_USER }}/recuperacion || true
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: mkdir -p /home/${{ secrets.VPS_USER }}/recuperacion
 
       - name: Subir stack file
         uses: appleboy/scp-action@v1
@@ -64,7 +66,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           port: ${{ secrets.VPS_SSH_PORT }}
           username: ${{ secrets.VPS_USER }}
-          password: ${{ secrets.VPS_PASSWORD }}
+          key: ${{ secrets.VPS_SSH_KEY }}
           source: "cristian.yml"
           target: "/home/${{ secrets.VPS_USER }}/recuperacion"
 
@@ -74,11 +76,12 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           port: ${{ secrets.VPS_SSH_PORT }}
           username: ${{ secrets.VPS_USER }}
-          password: ${{ secrets.VPS_PASSWORD }}
+          key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd /home/${{ secrets.VPS_USER }}/recuperacion
 
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
+
             docker network create --attachable --driver overlay traefik-public || true
 
             docker pull ghcr.io/${{ secrets.GHCR_USER }}/cristian:3.0.0

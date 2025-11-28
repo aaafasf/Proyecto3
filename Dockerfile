@@ -1,0 +1,13 @@
+FROM python:3.10-slim
+
+LABEL org.opencontainers.image.source="https://github.com/${GITHUB_REPOSITORY}"
+
+WORKDIR /app
+COPY . .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+EXPOSE 80
+
+# Ejecutar la app con gunicorn para producción
+CMD ["gunicorn", "--bind", "0.0.0.0:80", "app:app", "--workers", "2"]

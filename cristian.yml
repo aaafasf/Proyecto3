@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  cristian:
+    image: ghcr.io/aaafasf/cristian:3.0.0
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.cristian.entrypoints=http"
+        - "traefik.http.routers.cristian.rule=Host(`cristian.byronrm.com`)"
+        - "traefik.http.middlewares.cristian-https-redirect.redirectscheme.scheme=https"
+        - "traefik.http.routers.cristian.middlewares=cristian-https-redirect"
+        - "traefik.http.routers.cristian-secure.entrypoints=https"
+        - "traefik.http.routers.cristian-secure.rule=Host(`cristian.byronrm.com`)"
+        - "traefik.http.routers.cristian-secure.tls=true"
+        - "traefik.http.routers.cristian-secure.tls.certresolver=http"
+        - "traefik.http.routers.cristian-secure.service=cristian"
+        - "traefik.http.services.cristian.loadbalancer.server.port=80"
+        - "traefik.docker.network=traefik-public"
+
+    networks:
+      - traefik-public
+
+    ports:
+      - "1002:80"
+      - "1003:80"
+
+networks:
+  traefik-public:
+    external: true

@@ -17,4 +17,4 @@ def test_home_status_code(client):
 
 def test_home_content(client):
     response = client.get('/')
-    assert b"CRISTIAN STEVEN CALLE CUZCO" in response.data
+    assert b"EXAMEN" in response.data

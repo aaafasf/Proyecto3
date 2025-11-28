@@ -79,14 +79,9 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd /home/${{ secrets.VPS_USER }}/recuperacion
-
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
-
             docker network create --attachable --driver overlay traefik-public || true
-
             docker pull ghcr.io/${{ secrets.GHCR_USER }}/cristian:3.0.0
-
             docker stack rm cristian_stack || true
             sleep 5
-
             docker stack deploy --with-registry-auth --resolve-image always -c cristian.yml cristian_stack

@@ -1,6 +1,7 @@
+# archivo llamado "cristian"
 FROM python:3.10-slim
 
-LABEL org.opencontainers.image.source="https://github.com/${GITHUB_REPOSITORY}"
+LABEL org.opencontainers.image.source="https://github.com/aaafasf/Proyecto3"
 
 WORKDIR /app
 COPY . .

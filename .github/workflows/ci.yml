@@ -3,10 +3,10 @@ name: "CI/CD Pipeline"
 on:
   push:
     branches:
-      - cristian-steven
+      - steven
   pull_request:
     branches:
-      - cristian-steven
+      - steven
 
 permissions:
   contents: read
@@ -17,8 +17,6 @@ permissions:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    outputs:
-      image: ${{ steps.build.outputs.image }}
 
     steps:
       - name: Checkout code
@@ -32,11 +30,11 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt || true
-          pip install pytest || true
+          pip install -r requirements.txt
+          pip install pytest
 
       - name: Run tests
-        run: pytest -q || true
+        run: pytest -q
 
       - name: Login to GHCR
         uses: docker/login-action@v2
@@ -46,15 +44,14 @@ jobs:
           password: ${{ secrets.GHCR_PAT }}
 
       - name: Build and push Docker image
-        id: build
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: Dockerfile
+          file: cristian
           push: true
           tags: |
             ghcr.io/${{ secrets.GHCR_USER }}/cristian:3.0.0
-          labels: |
+          metadata: |
             org.opencontainers.image.version=3.0.0
 
   deploy:
@@ -74,8 +71,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            echo "Creando carpeta de deploy..."
-            mkdir -p /home/${{ secrets.VPS_USER }}/recuperacion
+            mkdir -p /home/${{ secrets.VPS_USER }}/recuperacion || true
 
       - name: Upload stack file to VPS
         uses: appleboy/scp-action@v0.1.6
@@ -95,23 +91,21 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
+            set -e
             cd /home/${{ secrets.VPS_USER }}/recuperacion
 
-            echo "Login en GHCR..."
+            # login GHCR
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
 
+            # asegurar la red traefik-public
             docker network create --attachable --driver overlay traefik-public || true
 
-            echo "Haciendo pull de la imagen..."
+            # pull imagen
             docker pull ghcr.io/${{ secrets.GHCR_USER }}/cristian:3.0.0
 
-            echo "Borrando stack anterior..."
+            # remover stack anterior y desplegar el nuevo
             docker stack rm cristian_stack || true
             sleep 5
+            docker stack deploy --with-registry-auth --resolve-image always -c cristian.yml cristian_stack
 
-            echo "Desplegando stack nuevo..."
-            docker stack deploy --with-registry-auth --resolve-image always \
-              -c cristian.yml cristian_stack
-
-            echo "Servicios activos:"
             docker service ls
